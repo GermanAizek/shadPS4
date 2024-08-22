@@ -508,8 +508,8 @@ IR::Value PatchCubeCoord(IR::IREmitter& ir, const IR::Value& s, const IR::Value&
     // because the s and t coordinate will be scaled and plus 1.5 by v_madak_f32.
     // We already force the scale value to be 1.0 when handling v_cubema_f32,
     // here we subtract 1.5 to recover the original value.
-    const IR::Value x = ir.FPSub(IR::F32{s}, ir.Imm32(1.5f));
-    const IR::Value y = ir.FPSub(IR::F32{t}, ir.Imm32(1.5f));
+    const IR::Value x = ir.FPSub(IR::F32{s}, ir.Imm32<1.5f>());
+    const IR::Value y = ir.FPSub(IR::F32{t}, ir.Imm32<1.5f>());
     return ir.CompositeConstruct(x, y, z);
 }
 
@@ -537,7 +537,7 @@ void PatchImageInstruction(IR::Block& block, IR::Inst& inst, Info& info, Descrip
         LOG_ERROR(Render_Vulkan, "Shader compiled with unbound image!");
         IR::IREmitter ir{block, IR::Block::InstructionList::s_iterator_to(inst)};
         inst.ReplaceUsesWith(
-            ir.CompositeConstruct(ir.Imm32(0.f), ir.Imm32(0.f), ir.Imm32(0.f), ir.Imm32(0.f)));
+            ir.CompositeConstruct(ir.Imm32<0.f>(), ir.Imm32<0.f>(), ir.Imm32<0.f>(), ir.Imm32<0.f>()));
         return;
     }
     ASSERT(image.GetType() != AmdGpu::ImageType::Invalid);
@@ -618,7 +618,7 @@ void PatchImageInstruction(IR::Block& block, IR::Inst& inst, Info& info, Descrip
         ASSERT_MSG(arg.Type() == IR::Type::U32, "Unexpected offset type");
 
         const auto read = [&](u32 offset) -> auto {
-            return ir.BitFieldExtract(IR::U32{arg}, ir.Imm32(offset), ir.Imm32(6), true);
+            return ir.BitFieldExtract(IR::U32{arg}, ir.Imm32(offset), ir.Imm32<6>(), true);
         };
 
         switch (image.GetType()) {
@@ -657,7 +657,7 @@ void PatchImageInstruction(IR::Block& block, IR::Inst& inst, Info& info, Descrip
                inst.GetOpcode() == IR::Opcode::ImageSampleExplicitLod ||
                inst.GetOpcode() == IR::Opcode::ImageSampleDrefExplicitLod);
         const u32 pos = inst.GetOpcode() == IR::Opcode::ImageSampleExplicitLod ? 2 : 3;
-        const IR::Value value = inst_info.force_level0 ? ir.Imm32(0.f) : arg;
+        const IR::Value value = inst_info.force_level0 ? ir.Imm32<0.f>() : arg;
         inst.SetArg(pos, value);
     }
 }

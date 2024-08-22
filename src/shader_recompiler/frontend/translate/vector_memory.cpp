@@ -208,7 +208,7 @@ void Translator::IMAGE_SAMPLE(const GcnInst& inst) {
         }
         IR::F32 value;
         if (flags.test(MimgModifier::Pcf)) {
-            value = i < 3 ? IR::F32{texel} : ir.Imm32(1.0f);
+            value = i < 3 ? IR::F32{texel} : ir.Imm32<1.0f>();
         } else {
             value = IR::F32{ir.CompositeExtract(texel, i)};
         }
@@ -269,7 +269,7 @@ void Translator::IMAGE_GATHER(const GcnInst& inst) {
 
     // Issue IR instruction, leaving unknown fields blank to patch later.
     const IR::Value texel = [&]() -> IR::Value {
-        const IR::F32 lod = flags.test(MimgModifier::Level0) ? ir.Imm32(0.f) : IR::F32{};
+        const IR::F32 lod = flags.test(MimgModifier::Level0) ? ir.Imm32<0.f>() : IR::F32{};
         if (!flags.test(MimgModifier::Pcf)) {
             return ir.ImageGather(handle, body, offset, info);
         }
@@ -324,7 +324,7 @@ void Translator::IMAGE_STORE(const GcnInst& inst) {
     boost::container::static_vector<IR::F32, 4> comps;
     for (u32 i = 0; i < 4; i++) {
         if (((mimg.dmask >> i) & 1) == 0) {
-            comps.push_back(ir.Imm32(0.f));
+            comps.push_back(ir.Imm32<0.f>());
             continue;
         }
         comps.push_back(ir.GetVectorReg<IR::F32>(data_reg++));

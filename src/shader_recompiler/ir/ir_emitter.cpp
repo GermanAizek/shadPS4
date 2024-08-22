@@ -173,9 +173,9 @@ U1 IREmitter::GetGotoVariable(u32 id) {
 U1 IREmitter::Condition(IR::Condition cond) {
     switch (cond) {
     case IR::Condition::False:
-        return Imm1(false);
+        return Imm1<false>();
     case IR::Condition::True:
-        return Imm1(true);
+        return Imm1<true>();
     case IR::Condition::Scc0:
         return LogicalNot(GetScc());
     case IR::Condition::Scc1:

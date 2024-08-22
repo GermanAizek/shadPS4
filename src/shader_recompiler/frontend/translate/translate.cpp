@@ -21,7 +21,7 @@ Translator::Translator(IR::Block* block_, Info& info_, const Profile& profile_)
 
 void Translator::EmitPrologue() {
     ir.Prologue();
-    ir.SetExec(ir.Imm1(true));
+    ir.SetExec(ir.Imm1<true>());
 
     // Initialize user data.
     IR::ScalarReg dst_sreg = IR::ScalarReg::S0;
@@ -369,9 +369,9 @@ void Translator::EmitFetch(const GcnInst& inst) {
             const IR::F32 comp = [&] {
                 switch (buffer.GetSwizzle(i)) {
                 case AmdGpu::CompSwizzle::One:
-                    return ir.Imm32(1.f);
+                    return ir.Imm32<1.f>();
                 case AmdGpu::CompSwizzle::Zero:
-                    return ir.Imm32(0.f);
+                    return ir.Imm32<0.f>();
                 case AmdGpu::CompSwizzle::Red:
                     return ir.GetAttribute(attr, 0);
                 case AmdGpu::CompSwizzle::Green:

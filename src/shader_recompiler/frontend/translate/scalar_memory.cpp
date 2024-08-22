@@ -60,7 +60,7 @@ void Translator::S_BUFFER_LOAD_DWORD(int num_dwords, const GcnInst& inst) {
         if (smrd.offset == SQ_SRC_LITERAL) {
             return ir.Imm32(inst.src[1].code);
         }
-        return ir.ShiftRightLogical(ir.GetScalarReg(IR::ScalarReg(smrd.offset)), ir.Imm32(2));
+        return ir.ShiftRightLogical(ir.GetScalarReg(IR::ScalarReg(smrd.offset)), ir.Imm32<2>());
     }();
     const IR::Value vsharp =
         ir.CompositeConstruct(ir.GetScalarReg(sbase), ir.GetScalarReg(sbase + 1),

@@ -21,6 +21,25 @@ public:
 
     Block* block;
 
+    template <bool value>
+    [[nodiscard]] U1 Imm1() const { return U1{Value{value}}; }
+    template <u8 value>
+    [[nodiscard]] U8 Imm8() const { return U8{Value{value}}; }
+    template <u16 value>
+    [[nodiscard]] U16 Imm16() const { return U16{Value{value}}; }
+    //template <u32 value> // conflict with s32 template argument
+    //[[nodiscard]] U32 Imm32() const { return U32{Value{value}}; }
+    template <s32 value>
+    [[nodiscard]] U32 Imm32() const { return U32{Value{static_cast<u32>(value)}}; }
+    template <f32 value>
+    [[nodiscard]] F32 Imm32() const { return F32{Value{value}}; }
+    //template <u64 value>  // conflict with s32 template argument
+    //[[nodiscard]] U64 Imm64() const { return U64{Value{value}}; }
+    template <s64 value>
+    [[nodiscard]] U64 Imm64() const { return U64{Value{static_cast<u64>(value)}}; }
+    template <f64 value>
+    [[nodiscard]] F64 Imm64() const { return F64{Value{value}}; }
+
     [[nodiscard]] U1 Imm1(bool value) const;
     [[nodiscard]] U8 Imm8(u8 value) const;
     [[nodiscard]] U16 Imm16(u16 value) const;

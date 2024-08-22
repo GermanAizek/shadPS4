@@ -195,7 +195,7 @@ void Translator::S_MOV_B64(const GcnInst& inst) {
         case OperandField::ScalarGPR:
             return ir.GetThreadBitScalarReg(IR::ScalarReg(inst.src[0].code));
         case OperandField::ConstZero:
-            return ir.Imm1(false);
+            return ir.Imm1<false>();
         default:
             UNREACHABLE();
         }
@@ -301,7 +301,7 @@ void Translator::S_AND_B32(const GcnInst& inst) {
     const IR::U32 src1{GetSrc(inst.src[1])};
     const IR::U32 result{ir.BitwiseAnd(src0, src1)};
     SetDst(inst.dst[0], result);
-    ir.SetScc(ir.INotEqual(result, ir.Imm32(0)));
+    ir.SetScc(ir.INotEqual(result, ir.Imm32<0>()));
 }
 
 void Translator::S_ASHR_I32(const GcnInst& inst) {
@@ -309,7 +309,7 @@ void Translator::S_ASHR_I32(const GcnInst& inst) {
     const IR::U32 src1{GetSrc(inst.src[1])};
     const IR::U32 result{ir.ShiftRightArithmetic(src0, src1)};
     SetDst(inst.dst[0], result);
-    ir.SetScc(ir.INotEqual(result, ir.Imm32(0)));
+    ir.SetScc(ir.INotEqual(result, ir.Imm32<0>()));
 }
 
 void Translator::S_OR_B32(const GcnInst& inst) {
@@ -317,7 +317,7 @@ void Translator::S_OR_B32(const GcnInst& inst) {
     const IR::U32 src1{GetSrc(inst.src[1])};
     const IR::U32 result{ir.BitwiseOr(src0, src1)};
     SetDst(inst.dst[0], result);
-    ir.SetScc(ir.INotEqual(result, ir.Imm32(0)));
+    ir.SetScc(ir.INotEqual(result, ir.Imm32<0>()));
 }
 
 void Translator::S_LSHR_B32(const GcnInst& inst) {
@@ -325,7 +325,7 @@ void Translator::S_LSHR_B32(const GcnInst& inst) {
     const IR::U32 src1{GetSrc(inst.src[1])};
     const IR::U32 result{ir.ShiftRightLogical(src0, src1)};
     SetDst(inst.dst[0], result);
-    ir.SetScc(ir.INotEqual(result, ir.Imm32(0)));
+    ir.SetScc(ir.INotEqual(result, ir.Imm32<0>()));
 }
 
 void Translator::S_CSELECT_B32(const GcnInst& inst) {
@@ -344,7 +344,7 @@ void Translator::S_CSELECT_B64(const GcnInst& inst) {
         case OperandField::ScalarGPR:
             return ir.GetThreadBitScalarReg(IR::ScalarReg(operand.code));
         case OperandField::ConstZero:
-            return ir.Imm1(false);
+            return ir.Imm1<false>();
         default:
             UNREACHABLE();
         }
@@ -367,25 +367,25 @@ void Translator::S_CSELECT_B64(const GcnInst& inst) {
 void Translator::S_BFE_U32(const GcnInst& inst) {
     const IR::U32 src0{GetSrc(inst.src[0])};
     const IR::U32 src1{GetSrc(inst.src[1])};
-    const IR::U32 offset{ir.BitwiseAnd(src1, ir.Imm32(0x1F))};
-    const IR::U32 count{ir.BitFieldExtract(src1, ir.Imm32(16), ir.Imm32(7))};
+    const IR::U32 offset{ir.BitwiseAnd(src1, ir.Imm32<0x1F>())};
+    const IR::U32 count{ir.BitFieldExtract(src1, ir.Imm32<16>(), ir.Imm32<7>())};
     const IR::U32 result{ir.BitFieldExtract(src0, offset, count)};
     SetDst(inst.dst[0], result);
-    ir.SetScc(ir.INotEqual(result, ir.Imm32(0)));
+    ir.SetScc(ir.INotEqual(result, ir.Imm32<0>()));
 }
 
 void Translator::S_LSHL_B32(const GcnInst& inst) {
     const IR::U32 src0{GetSrc(inst.src[0])};
     const IR::U32 src1{GetSrc(inst.src[1])};
-    const IR::U32 result = ir.ShiftLeftLogical(src0, ir.BitwiseAnd(src1, ir.Imm32(0x1F)));
+    const IR::U32 result = ir.ShiftLeftLogical(src0, ir.BitwiseAnd(src1, ir.Imm32<0x1F>()));
     SetDst(inst.dst[0], result);
-    ir.SetScc(ir.INotEqual(result, ir.Imm32(0)));
+    ir.SetScc(ir.INotEqual(result, ir.Imm32<0>()));
 }
 
 void Translator::S_BFM_B32(const GcnInst& inst) {
-    const IR::U32 src0{ir.BitwiseAnd(GetSrc(inst.src[0]), ir.Imm32(0x1F))};
-    const IR::U32 src1{ir.BitwiseAnd(GetSrc(inst.src[1]), ir.Imm32(0x1F))};
-    const IR::U32 mask{ir.ISub(ir.ShiftLeftLogical(ir.Imm32(1u), src0), ir.Imm32(1))};
+    const IR::U32 src0{ir.BitwiseAnd(GetSrc(inst.src[0]), ir.Imm32<0x1F>())};
+    const IR::U32 src1{ir.BitwiseAnd(GetSrc(inst.src[1]), ir.Imm32<0x1F>())};
+    const IR::U32 mask{ir.ISub(ir.ShiftLeftLogical(ir.Imm32<1u>(), src0), ir.Imm32<1>())};
     SetDst(inst.dst[0], ir.ShiftLeftLogical(mask, src1));
 }
 
@@ -426,7 +426,7 @@ void Translator::S_ADD_U32(const GcnInst& inst) {
     const IR::U32 src1{GetSrc(inst.src[1])};
     SetDst(inst.dst[0], ir.IAdd(src0, src1));
     // TODO: Carry out
-    ir.SetScc(ir.Imm1(false));
+    ir.SetScc(ir.Imm1<false>());
 }
 
 void Translator::S_SUB_U32(const GcnInst& inst) {
@@ -434,7 +434,7 @@ void Translator::S_SUB_U32(const GcnInst& inst) {
     const IR::U32 src1{GetSrc(inst.src[1])};
     SetDst(inst.dst[0], ir.ISub(src0, src1));
     // TODO: Carry out
-    ir.SetScc(ir.Imm1(false));
+    ir.SetScc(ir.Imm1<false>());
 }
 
 void Translator::S_GETPC_B64(u32 pc, const GcnInst& inst) {
