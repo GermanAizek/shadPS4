@@ -138,7 +138,7 @@ Id EmitImageFetch(EmitContext& ctx, IR::Inst* inst, u32 handle, Id coords, const
                   Id lod, Id ms) {
     const auto& texture = ctx.images[handle & 0xFFFF];
     const Id image = ctx.OpLoad(texture.image_type, texture.id);
-    const Id result_type = texture.data_types->Get(4);
+    const Id result_type = texture.data_types->Get<4>();
     ImageOperands operands;
     operands.AddOffset(ctx, offset);
     operands.Add(spv::ImageOperandsMask::Lod, lod);
@@ -193,7 +193,7 @@ Id EmitImageRead(EmitContext& ctx, IR::Inst* inst, const IR::Value& index, Id co
 void EmitImageWrite(EmitContext& ctx, IR::Inst* inst, u32 handle, Id coords, Id color) {
     const auto& texture = ctx.images[handle & 0xFFFF];
     const Id image = ctx.OpLoad(texture.image_type, texture.id);
-    const Id color_type = texture.data_types->Get(4);
+    const Id color_type = texture.data_types->Get<4>();
     ctx.OpImageWrite(image, coords, ctx.OpBitcast(color_type, color));
 }
 

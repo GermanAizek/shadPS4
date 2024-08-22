@@ -41,31 +41,31 @@ void BuildVsOutputs(Shader::Info& info, const AmdGpu::Liverpool::VsOutputControl
                    : (ctl.use_vtx_render_target_idx ? VsOutput::GsMrtIndex : VsOutput::None),
                ctl.use_vtx_viewport_idx ? VsOutput::GsVpIndex : VsOutput::None);
     // VS_OUT_CCDIST0
-    add_output(ctl.IsClipDistEnabled(0)
+    add_output(ctl.IsClipDistEnabled<0>()
                    ? VsOutput::ClipDist0
-                   : (ctl.IsCullDistEnabled(0) ? VsOutput::CullDist0 : VsOutput::None),
-               ctl.IsClipDistEnabled(1)
+                   : (ctl.IsCullDistEnabled<0>() ? VsOutput::CullDist0 : VsOutput::None),
+               ctl.IsClipDistEnabled<1>()
                    ? VsOutput::ClipDist1
-                   : (ctl.IsCullDistEnabled(1) ? VsOutput::CullDist1 : VsOutput::None),
-               ctl.IsClipDistEnabled(2)
+                   : (ctl.IsCullDistEnabled<1>() ? VsOutput::CullDist1 : VsOutput::None),
+               ctl.IsClipDistEnabled<2>()
                    ? VsOutput::ClipDist2
-                   : (ctl.IsCullDistEnabled(2) ? VsOutput::CullDist2 : VsOutput::None),
-               ctl.IsClipDistEnabled(3)
+                   : (ctl.IsCullDistEnabled<2>() ? VsOutput::CullDist2 : VsOutput::None),
+               ctl.IsClipDistEnabled<3>()
                    ? VsOutput::ClipDist3
-                   : (ctl.IsCullDistEnabled(3) ? VsOutput::CullDist3 : VsOutput::None));
+                   : (ctl.IsCullDistEnabled<3>() ? VsOutput::CullDist3 : VsOutput::None));
     // VS_OUT_CCDIST1
-    add_output(ctl.IsClipDistEnabled(4)
+    add_output(ctl.IsClipDistEnabled<4>()
                    ? VsOutput::ClipDist4
-                   : (ctl.IsCullDistEnabled(4) ? VsOutput::CullDist4 : VsOutput::None),
-               ctl.IsClipDistEnabled(5)
+                   : (ctl.IsCullDistEnabled<4>() ? VsOutput::CullDist4 : VsOutput::None),
+               ctl.IsClipDistEnabled<5>()
                    ? VsOutput::ClipDist5
-                   : (ctl.IsCullDistEnabled(5) ? VsOutput::CullDist5 : VsOutput::None),
-               ctl.IsClipDistEnabled(6)
+                   : (ctl.IsCullDistEnabled<5>() ? VsOutput::CullDist5 : VsOutput::None),
+               ctl.IsClipDistEnabled<6>()
                    ? VsOutput::ClipDist6
-                   : (ctl.IsCullDistEnabled(6) ? VsOutput::CullDist6 : VsOutput::None),
-               ctl.IsClipDistEnabled(7)
+                   : (ctl.IsCullDistEnabled<6>() ? VsOutput::CullDist6 : VsOutput::None),
+               ctl.IsClipDistEnabled<7>()
                    ? VsOutput::ClipDist7
-                   : (ctl.IsCullDistEnabled(7) ? VsOutput::CullDist7 : VsOutput::None));
+                   : (ctl.IsCullDistEnabled<7>() ? VsOutput::CullDist7 : VsOutput::None));
 }
 
 Shader::Info MakeShaderInfo(Shader::Stage stage, std::span<const u32, 16> user_data,
@@ -97,8 +97,8 @@ Shader::Info MakeShaderInfo(Shader::Stage stage, std::span<const u32, 16> user_d
         info.num_user_data = cs_pgm.settings.num_user_regs;
         info.workgroup_size = {cs_pgm.num_thread_x.full, cs_pgm.num_thread_y.full,
                                cs_pgm.num_thread_z.full};
-        info.tgid_enable = {cs_pgm.IsTgidEnabled(0), cs_pgm.IsTgidEnabled(1),
-                            cs_pgm.IsTgidEnabled(2)};
+        info.tgid_enable = {cs_pgm.IsTgidEnabled<0>(), cs_pgm.IsTgidEnabled<1>(),
+                            cs_pgm.IsTgidEnabled<2>()};
         info.shared_memory_size = cs_pgm.SharedMemSize();
         break;
     }

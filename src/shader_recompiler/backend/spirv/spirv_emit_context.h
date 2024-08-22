@@ -27,6 +27,11 @@ struct VectorIds {
         return ids[index - 1];
     }
 
+    template <u32 index>
+    [[nodiscard]] const Id& Get() const {
+        return ids[index - 1];
+    }
+
     [[nodiscard]] const Id& Get(u32 index) const {
         return ids[index - 1];
     }

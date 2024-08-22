@@ -476,7 +476,7 @@ void EmitContext::DefineImagesAndSamplers() {
                 return &F32;
             }
         }();
-        const Id sampled_type = data_types->Get(1);
+        const Id sampled_type = data_types->Get<1>();
         const Id image_type{ImageType(*this, image_desc, sampled_type)};
         const Id pointer_type{TypePointer(spv::StorageClass::UniformConstant, image_type)};
         const Id id{AddGlobalVariable(pointer_type, spv::StorageClass::UniformConstant)};

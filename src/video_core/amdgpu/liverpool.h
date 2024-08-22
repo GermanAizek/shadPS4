@@ -149,7 +149,8 @@ struct Liverpool {
             return settings.lds_dwords.Value() * 128 * 4;
         }
 
-        bool IsTgidEnabled(u32 i) const noexcept {
+        template <u32 i>
+        bool IsTgidEnabled() const noexcept {
             return (settings.tgid_enable.Value() >> i) & 1;
         }
 
@@ -233,11 +234,13 @@ struct Liverpool {
         BitField<23, 1, u32> vs_out_ccdist1_enable;
         BitField<25, 1, u32> use_vtx_gs_cut_flag;
 
-        bool IsClipDistEnabled(u32 index) const {
+        template <u32 index>
+        bool IsClipDistEnabled() const {
             return (clip_distance_enable.Value() >> index) & 1;
         }
 
-        bool IsCullDistEnabled(u32 index) const {
+        template <u32 index>
+        bool IsCullDistEnabled() const {
             return (cull_distance_enable.Value() >> index) & 1;
         }
     };

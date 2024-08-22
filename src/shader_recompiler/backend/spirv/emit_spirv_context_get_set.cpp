@@ -130,7 +130,7 @@ Id EmitReadConstBuffer(EmitContext& ctx, u32 handle, Id index) {
     auto& buffer = ctx.buffers[handle];
     index = ctx.OpIAdd(ctx.U32[1], index, buffer.offset_dwords);
     const Id ptr{ctx.OpAccessChain(buffer.pointer_type, buffer.id, ctx.u32_zero_value, index)};
-    return ctx.OpLoad(buffer.data_types->Get(1), ptr);
+    return ctx.OpLoad(buffer.data_types->Get<1>(), ptr);
 }
 
 Id EmitReadConstBufferU32(EmitContext& ctx, u32 handle, Id index) {
@@ -233,14 +233,14 @@ static Id EmitLoadBufferF32xN(EmitContext& ctx, u32 handle, Id address) {
     const Id index = ctx.OpShiftRightLogical(ctx.U32[1], address, ctx.ConstU32(2u));
     if constexpr (N == 1) {
         const Id ptr{ctx.OpAccessChain(buffer.pointer_type, buffer.id, ctx.u32_zero_value, index)};
-        return ctx.OpLoad(buffer.data_types->Get(1), ptr);
+        return ctx.OpLoad(buffer.data_types->Get<1>(), ptr);
     } else {
         boost::container::static_vector<Id, N> ids;
         for (u32 i = 0; i < N; i++) {
             const Id index_i = ctx.OpIAdd(ctx.U32[1], index, ctx.ConstU32(i));
             const Id ptr{
                 ctx.OpAccessChain(buffer.pointer_type, buffer.id, ctx.u32_zero_value, index_i)};
-            ids.push_back(ctx.OpLoad(buffer.data_types->Get(1), ptr));
+            ids.push_back(ctx.OpLoad(buffer.data_types->Get<1>(), ptr));
         }
         return ctx.OpCompositeConstruct(buffer.data_types->Get(N), ids);
     }
