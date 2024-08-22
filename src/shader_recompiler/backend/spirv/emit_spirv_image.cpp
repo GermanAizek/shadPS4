@@ -32,14 +32,14 @@ struct ImageOperands {
             switch (inst->GetOpcode()) {
             case IR::Opcode::CompositeConstructU32x2:
                 Add(spv::ImageOperandsMask::ConstOffset,
-                    ctx.ConstS32(static_cast<s32>(inst->Arg(0).U32()),
-                                 static_cast<s32>(inst->Arg(1).U32())));
+                    ctx.ConstS32(static_cast<s32>(inst->Arg<0>().U32()),
+                                 static_cast<s32>(inst->Arg<1>().U32())));
                 return;
             case IR::Opcode::CompositeConstructU32x3:
                 Add(spv::ImageOperandsMask::ConstOffset,
-                    ctx.ConstS32(static_cast<s32>(inst->Arg(0).U32()),
-                                 static_cast<s32>(inst->Arg(1).U32()),
-                                 static_cast<s32>(inst->Arg(2).U32())));
+                    ctx.ConstS32(static_cast<s32>(inst->Arg<0>().U32()),
+                                 static_cast<s32>(inst->Arg<1>().U32()),
+                                 static_cast<s32>(inst->Arg<2>().U32())));
                 return;
             default:
                 break;

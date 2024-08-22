@@ -9,11 +9,11 @@ void Visit(Info& info, IR::Inst& inst) {
     switch (inst.GetOpcode()) {
     case IR::Opcode::GetAttribute:
     case IR::Opcode::GetAttributeU32: {
-        info.loads.Set(inst.Arg(0).Attribute(), inst.Arg(1).U32());
+        info.loads.Set(inst.Arg<0>().Attribute(), inst.Arg<1>().U32());
         break;
     }
     case IR::Opcode::SetAttribute: {
-        info.stores.Set(inst.Arg(0).Attribute(), inst.Arg(2).U32());
+        info.stores.Set(inst.Arg<0>().Attribute(), inst.Arg<2>().U32());
         break;
     }
     case IR::Opcode::LoadSharedU32:

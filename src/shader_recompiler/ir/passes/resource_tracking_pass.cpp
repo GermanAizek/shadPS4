@@ -289,27 +289,27 @@ std::pair<const IR::Inst*, bool> TryDisableAnisoLod0(const IR::Inst* inst) {
     }
 
     // Select should be based on zero check
-    const auto* prod0 = inst->Arg(0).InstRecursive();
+    const auto* prod0 = inst->Arg<0>().InstRecursive();
     if (prod0->GetOpcode() != IR::Opcode::IEqual ||
-        !(prod0->Arg(1).IsImmediate() && prod0->Arg(1).U32() == 0u)) {
+        !(prod0->Arg<1>().IsImmediate() && prod0->Arg<1>().U32() == 0u)) {
         return not_found;
     }
 
     // The bits range is for lods
-    const auto* prod0_arg0 = prod0->Arg(0).InstRecursive();
+    const auto* prod0_arg0 = prod0->Arg<0>().InstRecursive();
     if (prod0_arg0->GetOpcode() != IR::Opcode::BitFieldUExtract ||
-        prod0_arg0->Arg(1).InstRecursive()->Arg(0).U32() != 0x0008000cu) {
+        prod0_arg0->Arg<1>().InstRecursive()->Arg<0>().U32() != 0x0008000cu) {
         return not_found;
     }
 
     // Make sure mask is masking out anisotropy
-    const auto* prod1 = inst->Arg(1).InstRecursive();
-    if (prod1->GetOpcode() != IR::Opcode::BitwiseAnd32 || prod1->Arg(1).U32() != 0xfffff1ff) {
+    const auto* prod1 = inst->Arg<1>().InstRecursive();
+    if (prod1->GetOpcode() != IR::Opcode::BitwiseAnd32 || prod1->Arg<1>().U32() != 0xfffff1ff) {
         return not_found;
     }
 
     // We're working on the first dword of s#
-    const auto* prod2 = inst->Arg(2).InstRecursive();
+    const auto* prod2 = inst->Arg<2>().InstRecursive();
     if (prod2->GetOpcode() != IR::Opcode::GetUserData &&
         prod2->GetOpcode() != IR::Opcode::ReadConst) {
         return not_found;
@@ -334,24 +334,24 @@ SharpLocation TrackSharp(const IR::Inst* inst) {
     if (inst->GetOpcode() == IR::Opcode::GetUserData) {
         return SharpLocation{
             .sgpr_base = u32(IR::ScalarReg::Max),
-            .dword_offset = u32(inst->Arg(0).ScalarReg()),
+            .dword_offset = u32(inst->Arg<0>().ScalarReg()),
         };
     }
     ASSERT_MSG(inst->GetOpcode() == IR::Opcode::ReadConst, "Sharp load not from constant memory");
 
     // Retrieve offset from base.
-    const u32 dword_offset = inst->Arg(1).U32();
-    const IR::Inst* spgpr_base = inst->Arg(0).InstRecursive();
+    const u32 dword_offset = inst->Arg<1>().U32();
+    const IR::Inst* spgpr_base = inst->Arg<0>().InstRecursive();
 
     // Retrieve SGPR pair that holds sbase
     const auto pred1 = [](const IR::Inst* inst) -> std::optional<IR::ScalarReg> {
         if (inst->GetOpcode() == IR::Opcode::GetUserData) {
-            return inst->Arg(0).ScalarReg();
+            return inst->Arg<0>().ScalarReg();
         }
         return std::nullopt;
     };
-    const auto base0 = IR::BreadthFirstSearch(spgpr_base->Arg(0), pred1);
-    const auto base1 = IR::BreadthFirstSearch(spgpr_base->Arg(1), pred1);
+    const auto base0 = IR::BreadthFirstSearch(spgpr_base->Arg<0>(), pred1);
+    const auto base1 = IR::BreadthFirstSearch(spgpr_base->Arg<1>(), pred1);
     ASSERT_MSG(base0 && base1, "Nested resource loads not supported");
 
     // Return retrieved location.
@@ -401,25 +401,25 @@ s32 TryHandleInlineCbuf(IR::Inst& inst, Info& info, Descriptors& descriptors,
     // buffer_load_format_xyz v[8:10], v1, s[32:35], 0 ...
     // is used to define an inline constant buffer
 
-    IR::Inst* handle = inst.Arg(0).InstRecursive();
-    IR::Inst* p0 = handle->Arg(0).InstRecursive();
-    if (p0->GetOpcode() != IR::Opcode::IAdd32 || !p0->Arg(0).IsImmediate() ||
-        !p0->Arg(1).IsImmediate()) {
+    IR::Inst* handle = inst.Arg<0>().InstRecursive();
+    IR::Inst* p0 = handle->Arg<0>().InstRecursive();
+    if (p0->GetOpcode() != IR::Opcode::IAdd32 || !p0->Arg<0>().IsImmediate() ||
+        !p0->Arg<1>().IsImmediate()) {
         return -1;
     }
-    IR::Inst* p1 = handle->Arg(1).InstRecursive();
+    IR::Inst* p1 = handle->Arg<1>().InstRecursive();
     if (p1->GetOpcode() != IR::Opcode::IAdd32) {
         return -1;
     }
-    if (!handle->Arg(3).IsImmediate() || !handle->Arg(2).IsImmediate()) {
+    if (!handle->Arg<3>().IsImmediate() || !handle->Arg<2>().IsImmediate()) {
         return -1;
     }
     // We have found this pattern. Build the sharp.
     std::array<u32, 4> buffer;
-    buffer[0] = info.pgm_base + p0->Arg(0).U32() + p0->Arg(1).U32();
+    buffer[0] = info.pgm_base + p0->Arg<0>().U32() + p0->Arg<1>().U32();
     buffer[1] = 0;
-    buffer[2] = handle->Arg(2).U32();
-    buffer[3] = handle->Arg(3).U32();
+    buffer[2] = handle->Arg<2>().U32();
+    buffer[3] = handle->Arg<3>().U32();
     cbuf = std::bit_cast<AmdGpu::Buffer>(buffer);
     // Assign a binding to this sharp.
     return descriptors.Add(BufferResource{
@@ -437,8 +437,8 @@ void PatchBufferInstruction(IR::Block& block, IR::Inst& inst, Info& info,
     s32 binding{};
     AmdGpu::Buffer buffer;
     if (binding = TryHandleInlineCbuf(inst, info, descriptors, buffer); binding == -1) {
-        IR::Inst* handle = inst.Arg(0).InstRecursive();
-        IR::Inst* producer = handle->Arg(0).InstRecursive();
+        IR::Inst* handle = inst.Arg<0>().InstRecursive();
+        IR::Inst* producer = handle->Arg<0>().InstRecursive();
         const auto sharp = TrackSharp(producer);
         const bool is_store = IsBufferStore(inst);
         buffer = info.ReadUd<AmdGpu::Buffer>(sharp.sgpr_base, sharp.dword_offset);
@@ -465,7 +465,7 @@ void PatchBufferInstruction(IR::Block& block, IR::Inst& inst, Info& info,
 
     // Replace handle with binding index in buffer resource list.
     IR::IREmitter ir{block, IR::Block::InstructionList::s_iterator_to(inst)};
-    inst.SetArg(0, ir.Imm32(binding));
+    inst.SetArg<0>(ir.Imm32(binding));
     ASSERT(!buffer.swizzle_enable && !buffer.add_tid_enable);
 
     // Address of constant buffer reads can be calculated at IR emittion time.
@@ -490,16 +490,16 @@ void PatchBufferInstruction(IR::Block& block, IR::Inst& inst, Info& info,
     // Todo: What if buffer is rebound with different stride?
     IR::U32 address = ir.Imm32(inst_info.inst_offset.Value());
     if (inst_info.index_enable) {
-        const IR::U32 index = inst_info.offset_enable ? IR::U32{ir.CompositeExtract(inst.Arg(1), 0)}
-                                                      : IR::U32{inst.Arg(1)};
+        const IR::U32 index = inst_info.offset_enable ? IR::U32{ir.CompositeExtract(inst.Arg<1>(), 0)}
+                                                      : IR::U32{inst.Arg<1>()};
         address = ir.IAdd(address, ir.IMul(index, ir.Imm32(buffer.GetStride())));
     }
     if (inst_info.offset_enable) {
-        const IR::U32 offset = inst_info.index_enable ? IR::U32{ir.CompositeExtract(inst.Arg(1), 1)}
-                                                      : IR::U32{inst.Arg(1)};
+        const IR::U32 offset = inst_info.index_enable ? IR::U32{ir.CompositeExtract(inst.Arg<1>(), 1)}
+                                                      : IR::U32{inst.Arg<1>()};
         address = ir.IAdd(address, offset);
     }
-    inst.SetArg(1, address);
+    inst.SetArg<1>(address);
 }
 
 IR::Value PatchCubeCoord(IR::IREmitter& ir, const IR::Value& s, const IR::Value& t,
@@ -527,7 +527,7 @@ void PatchImageInstruction(IR::Block& block, IR::Inst& inst, Info& info, Descrip
     ASSERT_MSG(result, "Unable to find image sharp source");
     const IR::Inst* producer = result.value();
     const bool has_sampler = producer->GetOpcode() == IR::Opcode::CompositeConstructU32x2;
-    const auto tsharp_handle = has_sampler ? producer->Arg(0).InstRecursive() : producer;
+    const auto tsharp_handle = has_sampler ? producer->Arg<0>().InstRecursive() : producer;
 
     // Read image sharp.
     const auto tsharp = TrackSharp(tsharp_handle);
@@ -555,7 +555,7 @@ void PatchImageInstruction(IR::Block& block, IR::Inst& inst, Info& info, Descrip
         if (!has_sampler) {
             return 0U;
         }
-        const IR::Value& handle = producer->Arg(1);
+        const IR::Value& handle = producer->Arg<1>();
         // Inline sampler resource.
         if (handle.IsImmediate()) {
             LOG_WARNING(Render_Vulkan, "Inline sampler detected");
@@ -580,7 +580,7 @@ void PatchImageInstruction(IR::Block& block, IR::Inst& inst, Info& info, Descrip
 
     // Patch image handle
     IR::IREmitter ir{block, IR::Block::InstructionList::s_iterator_to(inst)};
-    inst.SetArg(0, ir.Imm32(image_binding));
+    inst.SetArg<0>(ir.Imm32(image_binding));
 
     // No need to patch coordinates if we are just querying.
     if (inst.GetOpcode() == IR::Opcode::ImageQueryDimensions) {
@@ -588,28 +588,28 @@ void PatchImageInstruction(IR::Block& block, IR::Inst& inst, Info& info, Descrip
     }
 
     // Now that we know the image type, adjust texture coordinate vector.
-    IR::Inst* body = inst.Arg(1).InstRecursive();
+    IR::Inst* body = inst.Arg<1>().InstRecursive();
     const auto [coords, arg] = [&] -> std::pair<IR::Value, IR::Value> {
         switch (image.GetType()) {
         case AmdGpu::ImageType::Color1D: // x
-            return {body->Arg(0), body->Arg(1)};
+            return {body->Arg<0>(), body->Arg<1>()};
         case AmdGpu::ImageType::Color1DArray: // x, slice
             [[fallthrough]];
         case AmdGpu::ImageType::Color2D: // x, y
-            return {ir.CompositeConstruct(body->Arg(0), body->Arg(1)), body->Arg(2)};
+            return {ir.CompositeConstruct(body->Arg<0>(), body->Arg<1>()), body->Arg<2>()};
         case AmdGpu::ImageType::Color2DArray: // x, y, slice
             [[fallthrough]];
         case AmdGpu::ImageType::Color2DMsaa: // x, y, frag
             [[fallthrough]];
         case AmdGpu::ImageType::Color3D: // x, y, z
-            return {ir.CompositeConstruct(body->Arg(0), body->Arg(1), body->Arg(2)), body->Arg(3)};
+            return {ir.CompositeConstruct(body->Arg<0>(), body->Arg<1>(), body->Arg<2>()), body->Arg<3>()};
         case AmdGpu::ImageType::Cube: // x, y, face
-            return {PatchCubeCoord(ir, body->Arg(0), body->Arg(1), body->Arg(2)), body->Arg(3)};
+            return {PatchCubeCoord(ir, body->Arg<0>(), body->Arg<1>(), body->Arg<2>()), body->Arg<3>()};
         default:
             UNREACHABLE_MSG("Unknown image type {}", image.GetType());
         }
     }();
-    inst.SetArg(1, coords);
+    inst.SetArg<1>(coords);
 
     if (inst_info.has_offset) {
         // The offsets are six-bit signed integers: X=[5:0], Y=[13:8], and Z=[21:16].

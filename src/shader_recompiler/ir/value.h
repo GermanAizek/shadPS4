@@ -141,12 +141,42 @@ public:
         return op == IR::Opcode::Phi ? phi_args.size() : NumArgsOf(op);
     }
 
+    /// Get the value of a given preprocess-constexpr argument index.
+    template <size_t index>
+    [[nodiscard]] Value Arg() const noexcept {
+        if (op == IR::Opcode::Phi) {
+            return phi_args[index].second;
+        } else {
+            return args[index];
+        }
+    }
+
     /// Get the value of a given argument index.
     [[nodiscard]] Value Arg(size_t index) const noexcept {
         if (op == IR::Opcode::Phi) {
             return phi_args[index].second;
         } else {
             return args[index];
+        }
+    }
+
+    /// Set the value of a given preprocess-constexpr argument index.
+    template <size_t index>
+    void SetArg(Value value) {
+        if (index >= NumArgs()) {
+            throw InvalidArgument("Out of bounds argument index {} in opcode {}", index, op);
+        }
+        const IR::Value arg{Arg(index)};
+        if (!arg.IsImmediate()) {
+            UndoUse(arg);
+        }
+        if (!value.IsImmediate()) {
+            Use(value);
+        }
+        if (op == Opcode::Phi) {
+            phi_args[index].second = value;
+        } else {
+            args[index] = value;
         }
     }
 
@@ -243,7 +273,7 @@ inline bool Value::IsImmediate() const noexcept {
     IR::Type current_type{type};
     const IR::Inst* current_inst{inst};
     while (current_type == Type::Opaque && current_inst->GetOpcode() == Opcode::Identity) {
-        const Value& arg{current_inst->Arg(0)};
+        const Value& arg{current_inst->Arg<0>()};
         current_type = arg.type;
         current_inst = arg.inst;
     }
@@ -258,21 +288,21 @@ inline IR::Inst* Value::Inst() const {
 inline IR::Inst* Value::InstRecursive() const {
     DEBUG_ASSERT(type == Type::Opaque);
     if (IsIdentity()) {
-        return inst->Arg(0).InstRecursive();
+        return inst->Arg<0>().InstRecursive();
     }
     return inst;
 }
 
 inline IR::Inst* Value::TryInstRecursive() const {
     if (IsIdentity()) {
-        return inst->Arg(0).TryInstRecursive();
+        return inst->Arg<0>().TryInstRecursive();
     }
     return type == Type::Opaque ? inst : nullptr;
 }
 
 inline IR::Value Value::Resolve() const {
     if (IsIdentity()) {
-        return inst->Arg(0).Resolve();
+        return inst->Arg<0>().Resolve();
     }
     return *this;
 }
@@ -294,7 +324,7 @@ inline IR::Attribute Value::Attribute() const {
 
 inline bool Value::U1() const {
     if (IsIdentity()) {
-        return inst->Arg(0).U1();
+        return inst->Arg<0>().U1();
     }
     DEBUG_ASSERT(type == Type::U1);
     return imm_u1;
@@ -302,7 +332,7 @@ inline bool Value::U1() const {
 
 inline u8 Value::U8() const {
     if (IsIdentity()) {
-        return inst->Arg(0).U8();
+        return inst->Arg<0>().U8();
     }
     DEBUG_ASSERT(type == Type::U8);
     return imm_u8;
@@ -310,7 +340,7 @@ inline u8 Value::U8() const {
 
 inline u16 Value::U16() const {
     if (IsIdentity()) {
-        return inst->Arg(0).U16();
+        return inst->Arg<0>().U16();
     }
     DEBUG_ASSERT(type == Type::U16);
     return imm_u16;
@@ -318,7 +348,7 @@ inline u16 Value::U16() const {
 
 inline u32 Value::U32() const {
     if (IsIdentity()) {
-        return inst->Arg(0).U32();
+        return inst->Arg<0>().U32();
     }
     DEBUG_ASSERT(type == Type::U32);
     return imm_u32;
@@ -326,7 +356,7 @@ inline u32 Value::U32() const {
 
 inline f32 Value::F32() const {
     if (IsIdentity()) {
-        return inst->Arg(0).F32();
+        return inst->Arg<0>().F32();
     }
     DEBUG_ASSERT(type == Type::F32);
     return imm_f32;
@@ -334,7 +364,7 @@ inline f32 Value::F32() const {
 
 inline u64 Value::U64() const {
     if (IsIdentity()) {
-        return inst->Arg(0).U64();
+        return inst->Arg<0>().U64();
     }
     DEBUG_ASSERT(type == Type::U64);
     return imm_u64;
@@ -342,7 +372,7 @@ inline u64 Value::U64() const {
 
 inline f64 Value::F64() const {
     if (IsIdentity()) {
-        return inst->Arg(0).F64();
+        return inst->Arg<0>().F64();
     }
     DEBUG_ASSERT(type == Type::F64);
     return imm_f64;

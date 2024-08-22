@@ -315,52 +315,52 @@ void VisitInst(Pass& pass, IR::Block* block, IR::Inst& inst) {
     switch (opcode) {
     case IR::Opcode::SetThreadBitScalarReg:
     case IR::Opcode::SetScalarRegister: {
-        const IR::ScalarReg reg{inst.Arg(0).ScalarReg()};
-        pass.WriteVariable(reg, block, inst.Arg(1));
+        const IR::ScalarReg reg{inst.Arg<0>().ScalarReg()};
+        pass.WriteVariable(reg, block, inst.Arg<1>());
         break;
     }
     case IR::Opcode::SetVectorRegister: {
-        const IR::VectorReg reg{inst.Arg(0).VectorReg()};
-        pass.WriteVariable(reg, block, inst.Arg(1));
+        const IR::VectorReg reg{inst.Arg<0>().VectorReg()};
+        pass.WriteVariable(reg, block, inst.Arg<1>());
         break;
     }
     case IR::Opcode::SetGotoVariable:
-        pass.WriteVariable(GotoVariable{inst.Arg(0).U32()}, block, inst.Arg(1));
+        pass.WriteVariable(GotoVariable{inst.Arg<0>().U32()}, block, inst.Arg<1>());
         break;
     case IR::Opcode::SetExec:
-        pass.WriteVariable(ExecFlagTag{}, block, inst.Arg(0));
+        pass.WriteVariable(ExecFlagTag{}, block, inst.Arg<0>());
         break;
     case IR::Opcode::SetScc:
-        pass.WriteVariable(SccFlagTag{}, block, inst.Arg(0));
+        pass.WriteVariable(SccFlagTag{}, block, inst.Arg<0>());
         break;
     case IR::Opcode::SetVcc:
-        pass.WriteVariable(VccFlagTag{}, block, inst.Arg(0));
+        pass.WriteVariable(VccFlagTag{}, block, inst.Arg<0>());
         break;
     case IR::Opcode::SetSccLo:
-        pass.WriteVariable(SccLoTag{}, block, inst.Arg(0));
+        pass.WriteVariable(SccLoTag{}, block, inst.Arg<0>());
         break;
     case IR::Opcode::SetVccLo:
-        pass.WriteVariable(VccLoTag{}, block, inst.Arg(0));
+        pass.WriteVariable(VccLoTag{}, block, inst.Arg<0>());
         break;
     case IR::Opcode::SetVccHi:
-        pass.WriteVariable(VccHiTag{}, block, inst.Arg(0));
+        pass.WriteVariable(VccHiTag{}, block, inst.Arg<0>());
         break;
     case IR::Opcode::GetThreadBitScalarReg:
     case IR::Opcode::GetScalarRegister: {
-        const IR::ScalarReg reg{inst.Arg(0).ScalarReg()};
+        const IR::ScalarReg reg{inst.Arg<0>().ScalarReg()};
         const bool thread_bit = opcode == IR::Opcode::GetThreadBitScalarReg;
         const IR::Value value = pass.ReadVariable(reg, block, thread_bit);
         inst.ReplaceUsesWith(value);
         break;
     }
     case IR::Opcode::GetVectorRegister: {
-        const IR::VectorReg reg{inst.Arg(0).VectorReg()};
+        const IR::VectorReg reg{inst.Arg<0>().VectorReg()};
         const IR::Value value = pass.ReadVariable(reg, block);
         inst.ReplaceUsesWith(value);
         break;
     }
     case IR::Opcode::GetGotoVariable:
-        inst.ReplaceUsesWith(pass.ReadVariable(GotoVariable{inst.Arg(0).U32()}, block));
+        inst.ReplaceUsesWith(pass.ReadVariable(GotoVariable{inst.Arg<0>().U32()}, block));
         break;
     case IR::Opcode::GetExec:
         inst.ReplaceUsesWith(pass.ReadVariable(ExecFlagTag{}, block));

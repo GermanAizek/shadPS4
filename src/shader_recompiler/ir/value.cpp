@@ -33,7 +33,7 @@ IR::Type Value::Type() const noexcept {
         return inst->Flags<IR::Type>();
     }
     if (IsIdentity()) {
-        return inst->Arg(0).Type();
+        return inst->Arg<0>().Type();
     }
     if (type == Type::Opaque) {
         return inst->Type();

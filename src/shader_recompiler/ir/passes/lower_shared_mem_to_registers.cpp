@@ -18,15 +18,15 @@ void LowerSharedMemToRegisters(IR::Program& program) {
             }
             if (opcode == IR::Opcode::LoadSharedU32 || opcode == IR::Opcode::LoadSharedU64) {
                 // Search for write instruction with same offset
-                const IR::Inst* prod = inst.Arg(0).InstRecursive();
+                const IR::Inst* prod = inst.Arg<0>().InstRecursive();
                 const auto it = std::ranges::find_if(ds_writes, [&](const IR::Inst* write) {
-                    const IR::Inst* write_prod = write->Arg(0).InstRecursive();
-                    return write_prod->Arg(1).U32() == prod->Arg(1).U32() &&
-                           write_prod->Arg(0) == prod->Arg(0);
+                    const IR::Inst* write_prod = write->Arg<0>().InstRecursive();
+                    return write_prod->Arg<1>().U32() == prod->Arg<1>().U32() &&
+                           write_prod->Arg<0>() == prod->Arg<0>();
                 });
                 ASSERT(it != ds_writes.end());
                 // Replace data read with value written.
-                inst.ReplaceUsesWith((*it)->Arg(1));
+                inst.ReplaceUsesWith((*it)->Arg<1>());
             }
         }
     }

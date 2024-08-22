@@ -14,7 +14,7 @@ void IdentityRemovalPass(IR::BlockList& program) {
             for (size_t i = 0; i < num_args; ++i) {
                 IR::Value arg;
                 while ((arg = inst->Arg(i)).IsIdentity()) {
-                    inst->SetArg(i, arg.Inst()->Arg(0));
+                    inst->SetArg(i, arg.Inst()->Arg<0>());
                 }
             }
             if (inst->GetOpcode() == IR::Opcode::Identity ||
