@@ -73,7 +73,32 @@ public:
     void S_MOVK(const GcnInst& inst);
     void S_MOV(const GcnInst& inst);
     void S_MUL_I32(const GcnInst& inst);
-    void S_CMP(ConditionOp cond, bool is_signed, const GcnInst& inst);
+
+    template <ConditionOp cond, bool is_signed>
+    void S_CMP(const GcnInst& inst) {
+        const IR::U32 lhs = GetSrc(inst.src[0]);
+        const IR::U32 rhs = GetSrc(inst.src[1]);
+        const IR::U1 result = [&] {
+            switch (cond) {
+                case ConditionOp::EQ:
+                    return ir.IEqual(lhs, rhs);
+                case ConditionOp::LG:
+                    return ir.INotEqual(lhs, rhs);
+                case ConditionOp::GT:
+                    return ir.IGreaterThan<is_signed>(lhs, rhs);
+                case ConditionOp::GE:
+                    return ir.IGreaterThanEqual<is_signed>(lhs, rhs);
+                case ConditionOp::LT:
+                    return ir.ILessThan<is_signed>(lhs, rhs);
+                case ConditionOp::LE:
+                    return ir.ILessThanEqual<is_signed>(lhs, rhs);
+                default:
+                    UNREACHABLE();
+            }
+        }();
+        ir.SetScc(result);
+    }
+
     void S_AND_SAVEEXEC_B64(const GcnInst& inst);
     void S_MOV_B64(const GcnInst& inst);
     void S_OR_B64(NegateMode negate, bool is_xor, const GcnInst& inst);
@@ -130,7 +155,8 @@ public:
     void V_SUB_F32(const GcnInst& inst);
     void V_RCP_F32(const GcnInst& inst);
     void V_FMA_F32(const GcnInst& inst);
-    void V_CMP_F32(ConditionOp op, bool set_exec, const GcnInst& inst);
+    template <ConditionOp op, bool set_exec>
+    void V_CMP_F32(const GcnInst& inst);
     void V_MAX_F32(const GcnInst& inst, bool is_legacy = false);
     void V_MAX_U32(bool is_signed, const GcnInst& inst);
     void V_RSQ_F32(const GcnInst& inst);
@@ -150,7 +176,8 @@ public:
     void V_SUBREV_F32(const GcnInst& inst);
     void V_SUBREV_I32(const GcnInst& inst);
     void V_MAD_U64_U32(const GcnInst& inst);
-    void V_CMP_U32(ConditionOp op, bool is_signed, bool set_exec, const GcnInst& inst);
+    template <ConditionOp op, bool is_signed, bool set_exec>
+    void V_CMP_U32(const GcnInst& inst);
     void V_LSHRREV_B32(const GcnInst& inst);
     void V_MUL_HI_U32(bool is_signed, const GcnInst& inst);
     void V_SAD_U32(const GcnInst& inst);

@@ -5,6 +5,7 @@
 
 #include <cstring>
 #include <type_traits>
+#include <source_location>
 
 #include "shader_recompiler/ir/attribute.h"
 #include "shader_recompiler/ir/basic_block.h"
@@ -12,6 +13,14 @@
 #include "shader_recompiler/ir/value.h"
 
 namespace Shader::IR {
+namespace {
+[[noreturn]] void ThrowInvalidType(Type type, std::source_location loc = std::source_location::current()) {
+    const std::string functionName = loc.function_name();
+    const int lineNumber = loc.line();
+    UNREACHABLE_MSG("Invalid type = {}, functionName = {}, line = {}", u32(type), functionName,
+                    lineNumber);
+}
+} // Anonymous namespace
 
 class IREmitter {
 public:
@@ -235,12 +244,34 @@ public:
     [[nodiscard]] U32 SClamp(const U32& value, const U32& min, const U32& max);
     [[nodiscard]] U32 UClamp(const U32& value, const U32& min, const U32& max);
 
-    [[nodiscard]] U1 ILessThan(const U32U64& lhs, const U32U64& rhs, bool is_signed);
+    template <bool is_signed>
+    [[nodiscard]] U1 ILessThan(const U32U64& lhs, const U32U64& rhs) {
+        if (lhs.Type() != rhs.Type()) {
+            UNREACHABLE_MSG("Mismatching types {} and {}", lhs.Type(), rhs.Type());
+        }
+        switch (lhs.Type()) {
+            case Type::U32:
+                return Inst<U1>(is_signed ? Opcode::SLessThan32 : Opcode::ULessThan32, lhs, rhs);
+            case Type::U64:
+                return Inst<U1>(is_signed ? Opcode::SLessThan64 : Opcode::ULessThan64, lhs, rhs);
+            default:
+                ThrowInvalidType(lhs.Type());
+        }
+    }
     [[nodiscard]] U1 IEqual(const U32U64& lhs, const U32U64& rhs);
-    [[nodiscard]] U1 ILessThanEqual(const U32& lhs, const U32& rhs, bool is_signed);
-    [[nodiscard]] U1 IGreaterThan(const U32& lhs, const U32& rhs, bool is_signed);
+    template <bool is_signed>
+    [[nodiscard]] U1 ILessThanEqual(const U32& lhs, const U32& rhs) {
+        return Inst<U1>(is_signed ? Opcode::SLessThanEqual : Opcode::ULessThanEqual, lhs, rhs);
+    }
+    template <bool is_signed>
+    [[nodiscard]] U1 IGreaterThan(const U32& lhs, const U32& rhs) {
+        return Inst<U1>(is_signed ? Opcode::SGreaterThan : Opcode::UGreaterThan, lhs, rhs);
+    }
     [[nodiscard]] U1 INotEqual(const U32& lhs, const U32& rhs);
-    [[nodiscard]] U1 IGreaterThanEqual(const U32& lhs, const U32& rhs, bool is_signed);
+    template <bool is_signed>
+    [[nodiscard]] U1 IGreaterThanEqual(const U32& lhs, const U32& rhs) {
+        return Inst<U1>(is_signed ? Opcode::SGreaterThanEqual : Opcode::UGreaterThanEqual, lhs, rhs);
+    }
 
     [[nodiscard]] U1 LogicalOr(const U1& a, const U1& b);
     [[nodiscard]] U1 LogicalAnd(const U1& a, const U1& b);

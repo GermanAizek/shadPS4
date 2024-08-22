@@ -18,29 +18,29 @@ void Translator::EmitScalarAlu(const GcnInst& inst) {
     case Opcode::S_MOV_B64:
         return S_MOV_B64(inst);
     case Opcode::S_CMP_LT_U32:
-        return S_CMP(ConditionOp::LT, false, inst);
+        return S_CMP<ConditionOp::LT, false>(inst);
     case Opcode::S_CMP_LE_U32:
-        return S_CMP(ConditionOp::LE, false, inst);
+        return S_CMP<ConditionOp::LE, false>(inst);
     case Opcode::S_CMP_LG_U32:
-        return S_CMP(ConditionOp::LG, false, inst);
+        return S_CMP<ConditionOp::LG, false>(inst);
     case Opcode::S_CMP_LT_I32:
-        return S_CMP(ConditionOp::LT, true, inst);
+        return S_CMP<ConditionOp::LT, true>(inst);
     case Opcode::S_CMP_LG_I32:
-        return S_CMP(ConditionOp::LG, true, inst);
+        return S_CMP<ConditionOp::LG, true>(inst);
     case Opcode::S_CMP_GT_I32:
-        return S_CMP(ConditionOp::GT, true, inst);
+        return S_CMP<ConditionOp::GT, true>(inst);
     case Opcode::S_CMP_LE_I32:
-        return S_CMP(ConditionOp::LE, true, inst);
+        return S_CMP<ConditionOp::LE, true>(inst);
     case Opcode::S_CMP_GE_I32:
-        return S_CMP(ConditionOp::GE, true, inst);
+        return S_CMP<ConditionOp::GE, true>(inst);
     case Opcode::S_CMP_EQ_I32:
-        return S_CMP(ConditionOp::EQ, true, inst);
+        return S_CMP<ConditionOp::EQ, true>(inst);
     case Opcode::S_CMP_EQ_U32:
-        return S_CMP(ConditionOp::EQ, false, inst);
+        return S_CMP<ConditionOp::EQ, false>(inst);
     case Opcode::S_CMP_GE_U32:
-        return S_CMP(ConditionOp::GE, false, inst);
+        return S_CMP<ConditionOp::GE, false>(inst);
     case Opcode::S_CMP_GT_U32:
-        return S_CMP(ConditionOp::GT, false, inst);
+        return S_CMP<ConditionOp::GT, false>(inst);
     case Opcode::S_OR_B64:
         return S_OR_B64(NegateMode::None, false, inst);
     case Opcode::S_NOR_B64:
@@ -126,30 +126,6 @@ void Translator::S_MOV(const GcnInst& inst) {
 
 void Translator::S_MUL_I32(const GcnInst& inst) {
     SetDst(inst.dst[0], ir.IMul(GetSrc(inst.src[0]), GetSrc(inst.src[1])));
-}
-
-void Translator::S_CMP(ConditionOp cond, bool is_signed, const GcnInst& inst) {
-    const IR::U32 lhs = GetSrc(inst.src[0]);
-    const IR::U32 rhs = GetSrc(inst.src[1]);
-    const IR::U1 result = [&] {
-        switch (cond) {
-        case ConditionOp::EQ:
-            return ir.IEqual(lhs, rhs);
-        case ConditionOp::LG:
-            return ir.INotEqual(lhs, rhs);
-        case ConditionOp::GT:
-            return ir.IGreaterThan(lhs, rhs, is_signed);
-        case ConditionOp::GE:
-            return ir.IGreaterThanEqual(lhs, rhs, is_signed);
-        case ConditionOp::LT:
-            return ir.ILessThan(lhs, rhs, is_signed);
-        case ConditionOp::LE:
-            return ir.ILessThanEqual(lhs, rhs, is_signed);
-        default:
-            UNREACHABLE();
-        }
-    }();
-    ir.SetScc(result);
 }
 
 void Translator::S_AND_SAVEEXEC_B64(const GcnInst& inst) {

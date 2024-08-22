@@ -2,21 +2,11 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <bit>
-#include <source_location>
 #include "shader_recompiler/exception.h"
 #include "shader_recompiler/ir/ir_emitter.h"
 #include "shader_recompiler/ir/value.h"
 
 namespace Shader::IR {
-namespace {
-[[noreturn]] void ThrowInvalidType(Type type,
-                                   std::source_location loc = std::source_location::current()) {
-    const std::string functionName = loc.function_name();
-    const int lineNumber = loc.line();
-    UNREACHABLE_MSG("Invalid type = {}, functionName = {}, line = {}", u32(type), functionName,
-                    lineNumber);
-}
-} // Anonymous namespace
 
 U1 IREmitter::Imm1(bool value) const {
     return U1{Value{value}};
@@ -1196,20 +1186,6 @@ U32 IREmitter::UClamp(const U32& value, const U32& min, const U32& max) {
     return Inst<U32>(Opcode::UClamp32, value, min, max);
 }
 
-U1 IREmitter::ILessThan(const U32U64& lhs, const U32U64& rhs, bool is_signed) {
-    if (lhs.Type() != rhs.Type()) {
-        UNREACHABLE_MSG("Mismatching types {} and {}", lhs.Type(), rhs.Type());
-    }
-    switch (lhs.Type()) {
-    case Type::U32:
-        return Inst<U1>(is_signed ? Opcode::SLessThan32 : Opcode::ULessThan32, lhs, rhs);
-    case Type::U64:
-        return Inst<U1>(is_signed ? Opcode::SLessThan64 : Opcode::ULessThan64, lhs, rhs);
-    default:
-        ThrowInvalidType(lhs.Type());
-    }
-}
-
 U1 IREmitter::IEqual(const U32U64& lhs, const U32U64& rhs) {
     if (lhs.Type() != rhs.Type()) {
         UNREACHABLE_MSG("Mismatching types {} and {}", lhs.Type(), rhs.Type());
@@ -1222,20 +1198,8 @@ U1 IREmitter::IEqual(const U32U64& lhs, const U32U64& rhs) {
     }
 }
 
-U1 IREmitter::ILessThanEqual(const U32& lhs, const U32& rhs, bool is_signed) {
-    return Inst<U1>(is_signed ? Opcode::SLessThanEqual : Opcode::ULessThanEqual, lhs, rhs);
-}
-
-U1 IREmitter::IGreaterThan(const U32& lhs, const U32& rhs, bool is_signed) {
-    return Inst<U1>(is_signed ? Opcode::SGreaterThan : Opcode::UGreaterThan, lhs, rhs);
-}
-
 U1 IREmitter::INotEqual(const U32& lhs, const U32& rhs) {
     return Inst<U1>(Opcode::INotEqual, lhs, rhs);
-}
-
-U1 IREmitter::IGreaterThanEqual(const U32& lhs, const U32& rhs, bool is_signed) {
-    return Inst<U1>(is_signed ? Opcode::SGreaterThanEqual : Opcode::UGreaterThanEqual, lhs, rhs);
 }
 
 U1 IREmitter::LogicalOr(const U1& a, const U1& b) {
