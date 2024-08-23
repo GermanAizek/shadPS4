@@ -101,8 +101,80 @@ public:
 
     void S_AND_SAVEEXEC_B64(const GcnInst& inst);
     void S_MOV_B64(const GcnInst& inst);
-    void S_OR_B64(NegateMode negate, bool is_xor, const GcnInst& inst);
-    void S_AND_B64(NegateMode negate, const GcnInst& inst);
+    template <NegateMode negate, bool is_xor>
+    void S_OR_B64(const GcnInst& inst) {
+        const auto get_src = [&](const InstOperand& operand) {
+            switch (operand.field) {
+                case OperandField::ExecLo:
+                    return ir.GetExec();
+                case OperandField::VccLo:
+                    return ir.GetVcc();
+                case OperandField::ScalarGPR:
+                    return ir.GetThreadBitScalarReg(IR::ScalarReg(operand.code));
+                default:
+                    UNREACHABLE();
+            }
+        };
+
+        const IR::U1 src0{get_src(inst.src[0])};
+        IR::U1 src1{get_src(inst.src[1])};
+        if constexpr (negate == NegateMode::Src1) {
+            src1 = ir.LogicalNot(src1);
+        }
+        IR::U1 result = is_xor ? ir.LogicalXor(src0, src1) : ir.LogicalOr(src0, src1);
+        if constexpr (negate == NegateMode::Result) {
+            result = ir.LogicalNot(result);
+        }
+        ir.SetScc(result);
+        switch (inst.dst[0].field) {
+            case OperandField::VccLo:
+                ir.SetVcc(result);
+                break;
+            case OperandField::ScalarGPR:
+                ir.SetThreadBitScalarReg(IR::ScalarReg(inst.dst[0].code), result);
+                break;
+            default:
+                UNREACHABLE();
+        }
+    }
+    template <NegateMode negate>
+    void S_AND_B64(const GcnInst& inst) {
+        const auto get_src = [&](const InstOperand& operand) {
+            switch (operand.field) {
+                case OperandField::VccLo:
+                    return ir.GetVcc();
+                case OperandField::ExecLo:
+                    return ir.GetExec();
+                case OperandField::ScalarGPR:
+                    return ir.GetThreadBitScalarReg(IR::ScalarReg(operand.code));
+                default:
+                    UNREACHABLE();
+            }
+        };
+        const IR::U1 src0{get_src(inst.src[0])};
+        IR::U1 src1{get_src(inst.src[1])};
+        if constexpr (negate == NegateMode::Src1) {
+            src1 = ir.LogicalNot(src1);
+        }
+        IR::U1 result = ir.LogicalAnd(src0, src1);
+        if constexpr (negate == NegateMode::Result) {
+            result = ir.LogicalNot(result);
+        }
+        ir.SetScc(result);
+        switch (inst.dst[0].field) {
+            case OperandField::VccLo:
+                ir.SetVcc(result);
+                break;
+            case OperandField::ScalarGPR:
+                ir.SetThreadBitScalarReg(IR::ScalarReg(inst.dst[0].code), result);
+                break;
+            case OperandField::ExecLo:
+                ir.SetExec(result);
+                break;
+            default:
+                UNREACHABLE();
+        }
+    }
     void S_ADD_I32(const GcnInst& inst);
     void S_AND_B32(const GcnInst& inst);
     void S_ASHR_I32(const GcnInst& inst);
